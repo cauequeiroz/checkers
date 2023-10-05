@@ -18,16 +18,20 @@ public class BoardRenderer {
     private ShapeRenderer shapeRenderer;
 
     private SpriteBatch spriteBatch;
-    private Texture whitePieceTexture;
-    private Texture blackPieceTexture;
+    private Texture whiteStoneTexture;
+    private Texture blackStoneTexture;
+    private Texture whiteQueenStoneTexture;
+    private Texture blackQueenStoneTexture;
 
     public BoardRenderer(Board board, Camera camera) {
         this.board = board;
 
         shapeRenderer = new ShapeRenderer();
         spriteBatch = new SpriteBatch();
-        whitePieceTexture = new Texture(Gdx.files.internal("Stone_White_x2.png"));
-        blackPieceTexture = new Texture(Gdx.files.internal("Stone_Black_x2.png"));
+        whiteStoneTexture = new Texture(Gdx.files.internal("Stone_White_x2.png"));
+        blackStoneTexture = new Texture(Gdx.files.internal("Stone_Black_x2.png"));
+        whiteQueenStoneTexture = new Texture(Gdx.files.internal("Stone_White_2_x2.png"));
+        blackQueenStoneTexture = new Texture(Gdx.files.internal("Stone_Black_2_x2.png"));
 
         spriteBatch.setProjectionMatrix(camera.combined);
         shapeRenderer.setProjectionMatrix(camera.combined);
@@ -74,7 +78,7 @@ public class BoardRenderer {
             for (int col=0; col<8; col++) {
                 if (board.hasStone(col, row)) {
                     Stone stone = board.getStone(col, row);
-                    Texture stoneTexture = stone.getType() == StoneType.BLACK ? blackPieceTexture : whitePieceTexture;
+                    Texture stoneTexture = getStoneTexture(stone);
                     int x = col*60 + 5;
                     int y = row*60 + 5;
 
@@ -85,7 +89,7 @@ public class BoardRenderer {
 
         if (board.getMovingStone() != null) {
             Stone movingStone = board.getMovingStone().getStone();
-            Texture movingStoneTexture = movingStone.getType() == StoneType.BLACK ? blackPieceTexture : whitePieceTexture;
+            Texture movingStoneTexture = getStoneTexture(movingStone);
             int x = Gdx.input.getX() - movingStoneTexture.getWidth() / 2;
             int y = Gdx.input.getY() - movingStoneTexture.getHeight() / 2;
             spriteBatch.draw(movingStoneTexture, x, y);
@@ -95,9 +99,29 @@ public class BoardRenderer {
     }
 
     public void dispose() {
-        whitePieceTexture.dispose();
-        blackPieceTexture.dispose();
+        whiteStoneTexture.dispose();
+        blackStoneTexture.dispose();
         spriteBatch.dispose();
         shapeRenderer.dispose();
+    }
+
+    private Texture getStoneTexture(Stone stone) {
+        Texture texture = null;
+
+        switch (stone.getType()) {
+            case BLACK:
+                texture = blackStoneTexture;
+                break;
+            case BLACK_QUEEN:
+                texture = blackQueenStoneTexture;
+                break;
+            case WHITE:
+                texture = whiteStoneTexture;
+                break;
+            case WHITE_QUEEN:
+                texture = whiteQueenStoneTexture;
+        }
+
+        return texture;
     }
 }

@@ -1,19 +1,20 @@
 package br.com.cauequeiroz.model;
 
 import java.awt.*;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 public class Judge {
     private final Board board;
-    private StoneType currentTurn;
+    private Turn currentTurn;
     private LinkedList<Moviment> validMoviments;
 
     public Judge(Board board) {
         this.board = board;
-        this.currentTurn = StoneType.WHITE;
+        this.currentTurn = Turn.PLAYER_1;
     }
     public boolean isAValidStartMoviment(int x, int y) {
-        return board.hasStone(x, y) && board.getStone(x, y).getType() == currentTurn;
+        return board.hasStone(x, y) && isPlayerStone(board.getStone(x, y).getType());
     }
 
     public boolean isAValidEndMoviment(int x, int y) {
@@ -31,38 +32,51 @@ public class Judge {
     public void calculateValidMoviments() {
         validMoviments = new LinkedList<>();
         Point startPosition = board.getMovingStone().getStartPosition();
+        Stone stone = board.getMovingStone().getStone();
 
-        Point leftCoord;
-        Point rightCoord;
-        Point leftCoordPlusOne;
-        Point rightCoordPlusOne;
+        Point TOP_LEFT = new Point(startPosition.x - 1, startPosition.y - 1);
+        Point TOP_LEFT_X2 = new Point(startPosition.x - 2, startPosition.y - 2);
+        Point TOP_RIGHT = new Point(startPosition.x + 1, startPosition.y - 1);
+        Point TOP_RIGHT_X2 = new Point(startPosition.x + 2, startPosition.y - 2);
+        Point BOTTOM_LEFT = new Point(startPosition.x - 1, startPosition.y + 1);
+        Point BOTTOM_LEFT_X2 = new Point(startPosition.x - 2, startPosition.y + 2);
+        Point BOTTOM_RIGHT = new Point(startPosition.x + 1, startPosition.y + 1);
+        Point BOTTOM_RIGHT_X2 = new Point(startPosition.x + 2, startPosition.y + 2);
 
-        if (currentTurn == StoneType.WHITE) {
-            leftCoord = new Point(startPosition.x - 1, startPosition.y - 1);
-            rightCoord = new Point(startPosition.x + 1, startPosition.y - 1);
-            leftCoordPlusOne = new Point(startPosition.x - 2, startPosition.y - 2);
-            rightCoordPlusOne = new Point(startPosition.x + 2, startPosition.y - 2);
-        } else {
-            leftCoord = new Point(startPosition.x - 1, startPosition.y + 1);
-            rightCoord = new Point(startPosition.x + 1, startPosition.y + 1);
-            leftCoordPlusOne = new Point(startPosition.x - 2, startPosition.y + 2);
-            rightCoordPlusOne = new Point(startPosition.x + 2, startPosition.y + 2);
+        if (Arrays.asList(StoneType.WHITE, StoneType.WHITE_QUEEN, StoneType.BLACK_QUEEN).contains(stone.getType())) {
+            // Simple Moviment
+            if (isSquareEmpty(TOP_LEFT)) {
+                validMoviments.add(new Moviment(TOP_LEFT, null));
+            }
+            if (isSquareEmpty(TOP_RIGHT)) {
+                validMoviments.add(new Moviment(TOP_RIGHT, null));
+            }
+
+            // Capture
+            if (isSquareWithEnemy(TOP_LEFT) && isSquareEmpty(TOP_LEFT_X2)) {
+                validMoviments.add(new Moviment(TOP_LEFT_X2, TOP_LEFT));
+            }
+            if (isSquareWithEnemy(TOP_RIGHT) && isSquareEmpty(TOP_RIGHT_X2)) {
+                validMoviments.add(new Moviment(TOP_RIGHT_X2, TOP_RIGHT));
+            }
         }
 
-        // Simple Moviment
-        if (isSquareEmpty(leftCoord)) {
-            validMoviments.add(new Moviment(leftCoord, null));
-        }
-        if (isSquareEmpty(rightCoord)) {
-            validMoviments.add(new Moviment(rightCoord, null));
-        }
+        if (Arrays.asList(StoneType.BLACK, StoneType.WHITE_QUEEN, StoneType.BLACK_QUEEN).contains(stone.getType())) {
+            // Simple Moviment
+            if (isSquareEmpty(BOTTOM_LEFT)) {
+                validMoviments.add(new Moviment(BOTTOM_LEFT, null));
+            }
+            if (isSquareEmpty(BOTTOM_RIGHT)) {
+                validMoviments.add(new Moviment(BOTTOM_RIGHT, null));
+            }
 
-        // Capture
-        if (isSquareWithEnemy(leftCoord) && isSquareEmpty(leftCoordPlusOne)) {
-            validMoviments.add(new Moviment(leftCoordPlusOne, leftCoord));
-        }
-        if (isSquareWithEnemy(rightCoord) && isSquareEmpty(rightCoordPlusOne)) {
-            validMoviments.add(new Moviment(rightCoordPlusOne, rightCoord));
+            // Capture
+            if (isSquareWithEnemy(BOTTOM_LEFT) && isSquareEmpty(BOTTOM_LEFT_X2)) {
+                validMoviments.add(new Moviment(BOTTOM_LEFT_X2, BOTTOM_LEFT));
+            }
+            if (isSquareWithEnemy(BOTTOM_RIGHT) && isSquareEmpty(BOTTOM_RIGHT_X2)) {
+                validMoviments.add(new Moviment(BOTTOM_RIGHT_X2, BOTTOM_RIGHT));
+            }
         }
     }
 
@@ -83,10 +97,10 @@ public class Judge {
     }
 
     public void nextTurn() {
-        if (currentTurn == StoneType.BLACK) {
-            currentTurn = StoneType.WHITE;
+        if (currentTurn == Turn.PLAYER_1) {
+            currentTurn = Turn.PLAYER_2;
         } else {
-            currentTurn = StoneType.BLACK;
+            currentTurn = Turn.PLAYER_1;
         }
     }
 
@@ -99,6 +113,25 @@ public class Judge {
     }
 
     private boolean isSquareWithEnemy(Point coord) {
-        return isInsideBoard(coord) && board.hasStone(coord.x, coord.y) && board.getStone(coord.x, coord.y).getType() != currentTurn;
+        return isInsideBoard(coord) && board.hasStone(coord.x, coord.y) && !isPlayerStone(board.getStone(coord.x, coord.y).getType());
+    }
+
+    private boolean isPlayerStone(StoneType type) {
+        if (currentTurn == Turn.PLAYER_1 && Arrays.asList(StoneType.WHITE, StoneType.WHITE_QUEEN).contains(type)) {
+            return true;
+        }
+
+        if (currentTurn == Turn.PLAYER_2 && Arrays.asList(StoneType.BLACK, StoneType.BLACK_QUEEN).contains(type)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean isAPromotion(Point destinyPosition) {
+        StoneType type = board.getMovingStone().getStone().getType();
+
+        return (type == StoneType.WHITE && destinyPosition.y == 0) ||
+                (type == StoneType.BLACK && destinyPosition.y == 7);
     }
 }

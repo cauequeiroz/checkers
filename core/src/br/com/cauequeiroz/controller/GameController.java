@@ -1,9 +1,6 @@
 package br.com.cauequeiroz.controller;
 
-import br.com.cauequeiroz.model.Board;
-import br.com.cauequeiroz.model.Judge;
-import br.com.cauequeiroz.model.Stone;
-import br.com.cauequeiroz.model.StoneType;
+import br.com.cauequeiroz.model.*;
 import br.com.cauequeiroz.view.BoardRenderer;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
@@ -18,7 +15,8 @@ public class GameController {
     private Vector3 clickPosition;
     private Board board;
     private BoardRenderer boardRenderer;
-    private Sound pieceMoveSound;
+    private Sound stoneMoveSound;
+    private Sound stonePromotionSound;
     private Judge judge;
 
     public GameController(Camera camera) {
@@ -27,7 +25,8 @@ public class GameController {
 
     public void initialize() {
         clickPosition = new Vector3();
-        pieceMoveSound = Gdx.audio.newSound(Gdx.files.internal("move.wav"));
+        stoneMoveSound = Gdx.audio.newSound(Gdx.files.internal("move.wav"));
+        stonePromotionSound = Gdx.audio.newSound(Gdx.files.internal("promotion.mp3"));
 
         board = new Board();
 
@@ -85,14 +84,23 @@ public class GameController {
 
     private void endMoviment(int col, int row) {
         if (judge.isAValidEndMoviment(col, row)) {
-            Point takenStonePosition = judge.getMoviment(col, row).getEatenStonePosition();
+            Moviment moviment = judge.getMoviment(col, row);
+            Point takenStonePosition = moviment.getEatenStonePosition();
+            Point destinyPosition = moviment.getDestinyPosition();
 
             if (takenStonePosition != null) {
                 board.removeStone(takenStonePosition.x, takenStonePosition.y);
             }
 
-            board.leaveStone(col, row);
-            pieceMoveSound.play();
+            if (judge.isAPromotion(destinyPosition)) {
+                stoneMoveSound.play();
+                stonePromotionSound.play();
+                board.leaveStone(col, row, true);
+            } else {
+                stoneMoveSound.play();
+                board.leaveStone(col, row, false);
+            }
+
             judge.nextTurn();
         } else {
             board.returnMovingStone();
@@ -117,6 +125,6 @@ public class GameController {
 
     public void dispose() {
         boardRenderer.dispose();
-        pieceMoveSound.dispose();
+        stoneMoveSound.dispose();
     }
 }

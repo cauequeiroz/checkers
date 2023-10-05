@@ -50,7 +50,7 @@ public class BoardTest {
 
         board.insertStone(stone, 0, 0);
         board.takeStone(0, 0);
-        board.leaveStone(1, 1);
+        board.leaveStone(1, 1, false);
 
         if (board.getStone(1, 1).equals(stone) && board.getMovingStone() == null) {
             System.out.println("shouldLeaveAStoneAfterMove: PASS");

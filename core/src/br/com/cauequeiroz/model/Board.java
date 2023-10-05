@@ -51,9 +51,15 @@ public class Board {
         movingStone = new MovingStone(stone, x, y);
     }
 
-    public void leaveStone(int x, int y) {
+    public void leaveStone(int x, int y, boolean isAPromotion) {
         Stone stone = movingStone.getStone();
-        insertStone(stone, x, y);
+
+        if (isAPromotion) {
+            StoneType stoneType = stone.getType() == StoneType.WHITE ? StoneType.WHITE_QUEEN : StoneType.BLACK_QUEEN;
+            insertStone(new Stone(stoneType), x, y);
+        } else {
+            insertStone(stone, x, y);
+        }
 
         movingStone = null;
     }
@@ -63,7 +69,7 @@ public class Board {
     }
 
     public void returnMovingStone() {
-        leaveStone(movingStone.getStartPosition().x, movingStone.getStartPosition().y);
+        leaveStone(movingStone.getStartPosition().x, movingStone.getStartPosition().y, false);
     }
 
     public LinkedList<Moviment> getHighlightedPositions() {
